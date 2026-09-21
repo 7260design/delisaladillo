@@ -66,7 +66,7 @@
     <!-- ========================================== -->
     <!-- VISTA 1: MENÚ CLIENTE                      -->
     <!-- ========================================== -->
-    <main id="view-client" class="max-w-md md:max-w-3xl lg:max-w-5xl mx-auto px-4 pt-4">
+    <main id="view-client" class="max-w-md md:max-w-3xl lg:max-w-5xl mx-auto px-4 pt-4 pb-32">
         
         <!-- Banner del Comercio -->
         <div id="shop-banner" class="btn-theme text-white rounded-3xl p-5 md:p-6 mb-5 shadow-lg relative overflow-hidden transition-all duration-300">
@@ -643,54 +643,61 @@
             alert('¡Alias copiado al portapapeles!');
         }
 
-        function sendWhatsAppOrder() {
-            const name = document.getElementById('order-name').value.trim();
-            const type = document.getElementById('order-type').value;
-            const address = document.getElementById('order-address').value.trim();
-            const payment = document.getElementById('order-payment').value;
-            const notes = document.getElementById('order-notes').value.trim();
+       function sendWhatsAppOrder() {
+    const name = document.getElementById('order-name').value.trim();
+    const type = document.getElementById('order-type').value;
+    const address = document.getElementById('order-address').value.trim();
+    const payment = document.getElementById('order-payment').value;
+    const notes = document.getElementById('order-notes').value.trim();
 
-            if (!name) {
-                alert('Por favor, ingresa tu nombre completo.');
-                return;
-            }
+    if (!name) {
+        alert('Por favor, ingresa tu nombre completo.');
+        return;
+    }
 
-            if (type === 'Delivery' && !address) {
-                alert('Por favor, ingresa la dirección exacta para el envío.');
-                return;
-            }
+    if (type === 'Delivery' && !address) {
+        alert('Por favor, ingresa la dirección exacta para el envío.');
+        return;
+    }
 
-            let text = `*NUEVO PEDIDO - ${appData.config.name.toUpperCase()}*\n`;
-            text += `__________________________________\n`;
-            text += `👤 *Cliente:* ${name}\n`;
-            text += `🛵 *Modalidad:* ${type}\n`;
-            if (type === 'Delivery') {
-                text += `📍 *Dirección:* ${address}\n`;
-            }
-            text += `💳 *Forma de Pago:* ${payment}\n`;
-            if(notes) text += `📝 *Aclaraciones:* ${notes}\n`;
-            text += `__________________________________\n\n`;
-            text += `📋 *DETALLE DEL PEDIDO:* \n`;
+    let text = `*NUEVO PEDIDO - ${appData.config.name.toUpperCase()}*\n`;
+    text += `__________________________________\n`;
+    text += `👤 *Cliente:* ${name}\n`;
+    text += `🛵 *Modalidad:* ${type}\n`;
+    if (type === 'Delivery') {
+        text += `📍 *Dirección:* ${address}\n`;
+    }
+    text += `💳 *Forma de Pago:* ${payment}\n`;
+    if(notes) text += `📝 *Aclaraciones:* ${notes}\n`;
+    text += `__________________________________\n\n`;
+    text += `📋 *DETALLE DEL PEDIDO:* \n`;
 
-            let total = 0;
-            cart.forEach(item => {
-                const subtotal = item.price * item.qty;
-                total += subtotal;
-                text += `• ${item.qty}x ${item.title} - $${subtotal.toLocaleString()}\n`;
-            });
+    let total = 0;
+    cart.forEach(item => {
+        const subtotal = item.price * item.qty;
+        total += subtotal;
+        text += `• ${item.qty}x ${item.title} - $${subtotal.toLocaleString()}\n`;
+    });
 
-            text += `__________________________________\n`;
-            text += `💰 *TOTAL A PAGAR: $${total.toLocaleString()}*\n`;
+    text += `__________________________________\n`;
+    text += `💰 *TOTAL A PAGAR: $${total.toLocaleString()}*\n`;
 
-            if (payment === 'Transferencia') {
-                text += `\n📌 *Nota:* Recordá adjuntar la foto del comprobante de transferencia a continuación en este chat.`;
-            }
+    if (payment === 'Transferencia') {
+        text += `\n📌 *Nota:* Recordá adjuntar la foto del comprobante de transferencia a continuación en este chat.`;
+    }
 
-            const encodedText = encodeURIComponent(text);
-            const waUrl = `https://wa.me/${appData.config.phone}?text=${encodedText}`;
+    const encodedText = encodeURIComponent(text);
+    const waUrl = `https://wa.me/${appData.config.phone}?text=${encodedText}`;
 
-            window.open(waUrl, '_blank');
-        }
+    // Abrir WhatsApp en una nueva pestaña
+    window.open(waUrl, '_blank');
+
+    // Limpiar carrito y cerrar modal para no obstaculizar la vista al volver
+    cart = [];
+    closeCheckout();
+    renderClientView();
+    updateCartBar();
+}
 
         // --- PANEL DE ADMINISTRACIÓN ---
         function loginAdmin() {
