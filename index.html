@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú Digital & Pedidos WhatsApp</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,800;1,600&family=JetBrains+Mono:wght@400;700&display=swap');
+        
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Custom Theme Dynamic Rules */
+        .theme-emerald { --primary-rgb: 16, 185, 129; --primary-hex: #10b981; --primary-hover: #059669; }
+        .theme-violet { --primary-rgb: 124, 58, 237; --primary-hex: #7c3aed; --primary-hover: #6d28d9; }
+        .theme-rose { --primary-rgb: 225, 29, 72; --primary-hex: #e11d48; --primary-hover: #be123c; }
+        .theme-amber { --primary-rgb: 217, 119, 6; --primary-hex: #d97706; --primary-hover: #b45309; }
+        .theme-slate { --primary-rgb: 30, 41, 59; --primary-hex: #1e293b; --primary-hover: #0f172a; }
+
+        .btn-theme {
+            background-color: var(--primary-hex);
+        }
+        .btn-theme:hover {
+            background-color: var(--primary-hover);
+        }
+        .text-theme {
+            color: var(--primary-hex);
+        }
+        .bg-theme-soft {
+            background-color: rgba(var(--primary-rgb), 0.1);
+        }
+        .border-theme {
+            border-color: var(--primary-hex);
+        }
+    </style>
+</head>
+<body id="app-body" class="bg-slate-100 text-slate-800 antialiased font-sans pb-24 min-h-screen transition-colors duration-200">
+
+    <!-- TOP HEADER / VIEW TOGGLE -->
+    <header class="bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 shadow-sm transition-colors duration-200" id="app-header">
+        <div class="max-w-md md:max-w-3xl lg:max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 btn-theme text-white rounded-xl flex items-center justify-center font-black text-sm shadow-sm transition-all duration-300" id="header-logo">
+                    DS
+                </div>
+                <div>
+                    <h1 id="header-title" class="font-bold text-base text-slate-900 leading-tight">Mi Comercio</h1>
+                    <span class="text-[10px] text-slate-400 font-medium block">Catálogo & Pedidos Online</span>
+                </div>
+            </div>
+            <button onclick="toggleView()" id="btn-toggle-view" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 px-3.5 rounded-xl border border-slate-200 flex items-center gap-1.5 font-bold transition-all shadow-sm active:scale-95">
+                <i data-lucide="settings" class="w-3.5 h-3.5 text-slate-600"></i> Admin
+            </button>
+        </div>
+    </header>
+
+    <!-- ========================================== -->
+    <!-- VISTA 1: MENÚ CLIENTE                      -->
+    <!-- ========================================== -->
+    <main id="view-client" class="max-w-md md:max-w-3xl lg:max-w-5xl mx-auto px-4 pt-4 pb-32">
+        
+        <!-- Banner del Comercio -->
+        <div id="shop-banner" class="btn-theme text-white rounded-3xl p-5 md:p-6 mb-5 shadow-lg relative overflow-hidden transition-all duration-300">
+            <div class="relative z-10">
+                <div class="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-full text-[11px] font-semibold text-white mb-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
+                    Abierto • Pedidos directos por WhatsApp
+                </div>
+                <h2 id="client-shop-name" class="text-2xl md:text-3xl font-black tracking-tight mb-1">Cargando...</h2>
+                <p class="text-xs md:text-sm text-white/90 font-medium max-w-lg">Elegí lo que más te guste de nuestra carta digital y confirmá tu pedido al instante.</p>
+            </div>
+            <div class="absolute -right-6 -bottom-8 opacity-15 text-white pointer-events-none">
+                <i data-lucide="utensils" class="w-40 h-40"></i>
+            </div>
+        </div>
+
+        <!-- Filtro de Categorías -->
+        <div id="category-tabs" class="flex overflow-x-auto gap-2 pb-2 mb-5 no-scrollbar">
+            <!-- Categorías dinámicas -->
+        </div>
+
+        <!-- Lista de Productos Grid (Responsive) -->
+        <div id="products-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 mb-6">
+            <!-- Productos dinámicos -->
+        </div>
+
+    </main>
+
+    <!-- BARRA FLOTANTE DEL CARRITO -->
+    <div id="cart-bar" class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 p-3 z-40 hidden shadow-2xl transition-all">
+        <div class="max-w-md md:max-w-3xl lg:max-w-5xl mx-auto flex items-center justify-between gap-3">
+            <div class="pl-1">
+                <span class="text-[10px] uppercase font-extrabold tracking-wider text-slate-400 block">Total Estimado</span>
+                <span id="cart-total" class="text-lg md:text-xl font-black text-slate-900 leading-none">$0</span>
+            </div>
+            <button onclick="openCheckout()" class="btn-theme hover:opacity-95 active:scale-[0.99] text-white font-bold py-3 px-5 rounded-2xl flex items-center justify-center gap-2 shadow-lg text-sm transition-all">
+                <i data-lucide="shopping-bag" class="w-4 h-4"></i> Ver Pedido (<span id="cart-count">0</span>)
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL DE CHECKOUT / TU PEDIDO -->
+    <div id="modal-checkout" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden p-0 sm:p-4">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-100">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/80">
+                <h3 class="font-bold text-slate-800 flex items-center gap-2 text-base">
+                    <i data-lucide="shopping-cart" class="w-5 h-5 text-theme"></i> Tu Pedido
+                </h3>
+                <button onclick="closeCheckout()" class="w-8 h-8 rounded-full bg-slate-200/70 text-slate-600 flex items-center justify-center text-sm hover:bg-slate-200 transition">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            
+            <div class="p-4 overflow-y-auto space-y-4 flex-1">
+                <!-- Detalle de Productos -->
+                <div>
+                    <span class="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1 block">Resumen de Selección</span>
+                    <div id="cart-items-detail" class="divide-y divide-slate-100 text-sm"></div>
+                </div>
+
+                <!-- Formulario del Cliente -->
+                <div class="space-y-3.5 pt-3 border-t border-slate-100">
+                    <span class="text-[10px] font-black uppercase text-slate-400 tracking-wider block">Datos de Entrega</span>
+                    
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Nombre Completo *</label>
+                        <input type="text" id="order-name" placeholder="Ej: María González" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none bg-slate-50/50">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Modalidad de Entrega *</label>
+                        <select id="order-type" onchange="toggleAddressField()" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none bg-slate-50/50 font-medium">
+                            <option value="Retiro">Retiro por el Local</option>
+                            <option value="Mesa">Consumo en Local / Mesa</option>
+                            <option value="Delivery">Envío a Domicilio</option>
+                        </select>
+                    </div>
+
+                    <!-- CAMPO DINÁMICO: DOMICILIO DE ENTREGA -->
+                    <div id="container-address" class="hidden">
+                        <label class="block text-xs font-bold text-slate-800 mb-1">Dirección Exacta de Entrega *</label>
+                        <input type="text" id="order-address" placeholder="Ej: Av. San Martín 1234, Depto 2B" class="w-full border-2 border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none bg-slate-50">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Forma de Pago *</label>
+                        <select id="order-payment" onchange="togglePaymentAliasNotice()" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none bg-slate-50/50 font-medium">
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Transferencia">Transferencia / Mercado Pago</option>
+                        </select>
+                    </div>
+
+                    <!-- NOTICIA Y ALIAS DINÁMICO DE TRANSFERENCIA -->
+                    <div id="container-payment-alias" class="hidden space-y-2">
+                        <div class="p-3 bg-amber-50 border border-amber-200/80 rounded-2xl text-xs space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="font-extrabold text-amber-900 flex items-center gap-1">
+                                    <i data-lucide="qr-code" class="w-4 h-4 text-amber-700"></i> Alias para Transferencia:
+                                </span>
+                                <button type="button" onclick="copyAliasToClipboard()" class="bg-amber-200/80 hover:bg-amber-200 text-amber-900 text-[11px] font-bold py-1 px-2.5 rounded-lg transition active:scale-95 flex items-center gap-1">
+                                    <i data-lucide="copy" class="w-3 h-3"></i> Copiar
+                                </button>
+                            </div>
+                            <div id="display-payment-alias" class="font-mono text-xs font-black text-amber-950 bg-white/80 p-2 rounded-xl border border-amber-200 break-all select-all">
+                                Sin alias configurado
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-blue-50 border border-blue-200 rounded-2xl flex items-start gap-2.5 text-blue-900 text-xs">
+                            <i data-lucide="info" class="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5"></i>
+                            <p class="font-medium leading-relaxed">
+                                Recordá adjuntar el comprobante de pago directamente en el chat de WhatsApp al enviar tu pedido.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Aclaraciones / Observaciones</label>
+                        <textarea id="order-notes" rows="2" placeholder="Ej: Sin cebolla, sin condimentos, etc..." class="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none bg-slate-50/50 resize-none"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-slate-100 bg-slate-50">
+                <button onclick="sendWhatsAppOrder()" class="w-full btn-theme hover:opacity-95 active:scale-[0.99] text-white font-bold py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg text-sm transition">
+                    <i data-lucide="send" class="w-4 h-4"></i> Enviar Pedido por WhatsApp
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- VISTA 2: PANEL ADMINISTRACIÓN              -->
+    <!-- ========================================== -->
+    <main id="view-admin" class="max-w-md md:max-w-2xl lg:max-w-4xl mx-auto px-4 pt-4 hidden">
+        
+        <!-- Login Clave -->
+        <div id="admin-login" class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm text-center max-w-sm mx-auto">
+            <div class="w-12 h-12 bg-slate-100 text-slate-700 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
+                <i data-lucide="lock" class="w-6 h-6"></i>
+            </div>
+            <h2 class="font-bold text-slate-800 text-lg mb-1">Panel del Comercio</h2>
+            <p class="text-xs text-slate-500 mb-4">Ingresá tu clave para gestionar el menú y la configuración.</p>
+            <input type="password" id="admin-pass" placeholder="Clave (Default: 1234)" class="w-full border border-slate-200 rounded-xl p-2.5 text-center text-sm mb-3 focus:ring-2 focus:ring-slate-400 outline-none">
+            <button onclick="loginAdmin()" class="w-full bg-slate-900 hover:bg-black text-white font-bold py-2.5 rounded-xl text-sm transition active:scale-95">Ingresar al Panel</button>
+        </div>
+
+        <!-- Contenido Panel (Protegido) -->
+        <div id="admin-content" class="space-y-6 hidden">
+            
+            <!-- Barra Superior Admin con Logout -->
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="text-xs font-bold text-slate-700">Sesión Admin Activa</span>
+                </div>
+                <button onclick="logoutAdmin()" class="text-xs bg-red-50 hover:bg-red-100 text-red-600 font-bold py-1.5 px-3 rounded-xl border border-red-200 transition flex items-center gap-1">
+                    <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Cerrar Sesión
+                </button>
+            </div>
+
+            <!-- Configuración General -->
+            <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2 border-b border-slate-100 pb-2">
+                    <i data-lucide="sliders" class="w-4 h-4 text-theme"></i> Datos del Local
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-slate-600 font-medium mb-1">Nombre del Comercio</label>
+                        <input type="text" id="cfg-name" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm outline-none focus:border-slate-400">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-600 font-medium mb-1">WhatsApp (con código de país)</label>
+                        <input type="text" id="cfg-phone" placeholder="Ej: 5492344123456" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm outline-none focus:border-slate-400">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-600 font-medium mb-1">Alias / CBU para Transferencias</label>
+                        <input type="text" id="cfg-alias" placeholder="Ej: MI.LOCAL.MP" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm outline-none focus:border-slate-400 font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-600 font-medium mb-1">Clave de Acceso Admin</label>
+                        <input type="password" id="cfg-pass" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm outline-none focus:border-slate-400">
+                    </div>
+                </div>
+                <button onclick="saveConfig()" class="w-full bg-slate-900 text-white text-xs font-bold py-2.5 rounded-xl hover:bg-black transition">Guardar Datos del Local</button>
+            </div>
+
+            <!-- Módulo de Personalización Visual -->
+            <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2 border-b border-slate-100 pb-2">
+                    <i data-lucide="palette" class="w-4 h-4 text-theme"></i> Personalización Visual
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Paleta de Colores -->
+                    <div>
+                        <label class="block text-xs text-slate-600 font-medium mb-2">Color de Acento / Tema</label>
+                        <div class="flex gap-2">
+                            <button type="button" onclick="setThemeColor('emerald')" class="w-8 h-8 rounded-full bg-emerald-500 ring-2 ring-offset-2 ring-emerald-500 hover:scale-105 transition"></button>
+                            <button type="button" onclick="setThemeColor('violet')" class="w-8 h-8 rounded-full bg-violet-600 hover:scale-105 transition"></button>
+                            <button type="button" onclick="setThemeColor('rose')" class="w-8 h-8 rounded-full bg-rose-600 hover:scale-105 transition"></button>
+                            <button type="button" onclick="setThemeColor('amber')" class="w-8 h-8 rounded-full bg-amber-600 hover:scale-105 transition"></button>
+                            <button type="button" onclick="setThemeColor('slate')" class="w-8 h-8 rounded-full bg-slate-800 hover:scale-105 transition"></button>
+                        </div>
+                    </div>
+
+                    <!-- Estilo de Fondo -->
+                    <div>
+                        <label class="block text-xs text-slate-600 font-medium mb-1">Fondo de la App</label>
+                        <select id="cfg-bg-style" onchange="applyVisualTheme()" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm outline-none">
+                            <option value="light">Claro Neutro (Gris Soft)</option>
+                            <option value="pure">Blanco Puro</option>
+                            <option value="dark">Modo Oscuro Elegante</option>
+                        </select>
+                    </div>
+
+                    <!-- Redondeo de Bordes -->
+                    <div>
+                        <label class="block text-xs text-slate-600 font-medium mb-1">Bordes y Esquinas</label>
+                        <select id="cfg-radius-style" onchange="applyVisualTheme()" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm outline-none">
+                            <option value="rounded-2xl">Redondeado Moderno</option>
+                            <option value="rounded-3xl">Redondeado Pronunciado</option>
+                            <option value="rounded-lg">Bordes Rectos / Clásicos</option>
+                        </select>
+                    </div>
+
+                    <!-- Tipografía -->
+                    <div>
+                        <label class="block text-xs text-slate-600 font-medium mb-1">Estilo de Tipografía</label>
+                        <select id="cfg-font-style" onchange="applyVisualTheme()" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm outline-none">
+                            <option value="font-sans">Inter (Moderna / Sans)</option>
+                            <option value="font-serif">Playfair (Elegante / Serif)</option>
+                            <option value="font-mono">JetBrains (Técnica / Mono)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Agregar / Editar Producto (ANCLA EDITAR PRODUCTO) -->
+            <div id="section-product-form" class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-4 scroll-mt-20">
+                <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2 border-b border-slate-100 pb-2" id="admin-form-title">
+                    <i data-lucide="plus-circle" class="w-4 h-4 text-theme"></i> Agregar Producto
+                </h3>
+                <input type="hidden" id="prod-id">
+                
+                <div>
+                    <label class="block text-xs text-slate-600 font-medium mb-1">Nombre del Producto *</label>
+                    <input type="text" id="prod-title" placeholder="Ej: Hamburguesa Doble Cheddar" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm outline-none">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-slate-600 font-medium mb-1">Precio ($) *</label>
+                        <input type="number" id="prod-price" placeholder="4500" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-600 font-medium mb-1">Categoría *</label>
+                        <input type="text" id="prod-cat" placeholder="Ej: Comidas, Bebidas" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs text-slate-600 font-medium mb-1">Descripción</label>
+                    <input type="text" id="prod-desc" placeholder="Ej: Doble carne, cheddar y papas fritas" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm outline-none">
+                </div>
+
+                <!-- CARGA Y REEMPLAZO DE FOTO -->
+                <div>
+                    <label class="block text-xs text-slate-600 font-medium mb-1">Foto del Producto</label>
+                    <input type="file" id="prod-image-file" accept="image/*" onchange="handleImageUpload(event)" class="w-full text-xs text-slate-500 file:mr-2 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer">
+                    <input type="hidden" id="prod-image-base64">
+                    
+                    <div id="image-preview-container" class="mt-3 flex items-center gap-3 hidden">
+                        <img id="img-preview-src" src="" alt="Vista previa" class="w-16 h-16 object-cover rounded-xl border border-slate-200 shadow-sm">
+                        <button type="button" onclick="removeProductPhoto()" class="text-xs bg-red-50 text-red-600 hover:bg-red-100 font-semibold py-1.5 px-3 rounded-xl border border-red-200 transition">
+                            Eliminar Foto
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PRODUCTO DESTACADO / ESTRELLA -->
+                <div class="flex items-center gap-2 pt-1">
+                    <input type="checkbox" id="prod-featured" class="w-4 h-4 text-amber-500 rounded border-slate-300 focus:ring-amber-400">
+                    <label for="prod-featured" class="text-xs font-bold text-slate-700 flex items-center gap-1">
+                        <i data-lucide="star" class="w-3.5 h-3.5 text-amber-500 fill-amber-500"></i> Producto Estrella / Destacado
+                    </label>
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button onclick="saveProduct()" class="flex-1 btn-theme text-white text-xs font-bold py-2.5 rounded-xl hover:opacity-90 transition">Guardar Producto</button>
+                    <button onclick="resetProductForm()" type="button" class="bg-slate-100 text-slate-600 text-xs font-semibold py-2.5 px-4 rounded-xl hover:bg-slate-200">Cancelar</button>
+                </div>
+            </div>
+
+            <!-- Listado de Productos Activos (Ordenamiento y Destacados) -->
+            <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                    <h3 class="font-bold text-slate-800 text-sm">Productos Activos</h3>
+                    <span class="text-[11px] text-slate-400 font-medium">Usa las flechas ▲ ▼ para reordenar</span>
+                </div>
+                <div id="admin-products-list" class="divide-y divide-slate-100 text-xs">
+                    <!-- Dinámico -->
+                </div>
+            </div>
+
+            <!-- Backup & Copia de Seguridad -->
+            <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+                <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2 border-b border-slate-100 pb-2">
+                    <i data-lucide="database" class="w-4 h-4 text-theme"></i> Copia de Seguridad (Backup JSON)
+                </h3>
+                <p class="text-xs text-slate-500">Descargá o importá todo tu catálogo y configuración para moverlo a otro dispositivo.</p>
+                <div class="flex flex-col sm:flex-row gap-2 pt-1">
+                    <button onclick="exportBackupJSON()" class="flex-1 bg-slate-800 hover:bg-black text-white text-xs font-bold py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i> Exportar Backup JSON
+                    </button>
+                    <label class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer border border-slate-200">
+                        <i data-lucide="upload" class="w-3.5 h-3.5"></i> Importar Backup JSON
+                        <input type="file" accept=".json" onchange="importBackupJSON(event)" class="hidden">
+                    </label>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- LÓGICA DEL SISTEMA EN JAVASCRIPT -->
+    <script>
+        // --- ESTADO Y DATOS INICIALES ---
+        const DEFAULT_DATA = {
+            config: {
+                name: "Deli Saladillo",
+                phone: "5492344123456",
+                alias: "DELI.SALADILLO.MP",
+                pass: "1234",
+                themeColor: "emerald",
+                bgStyle: "light",
+                radiusStyle: "rounded-2xl",
+                fontStyle: "font-sans"
+            },
+            products: [
+                { id: 1, title: "Combo Burger Doble Lomo", price: 15500, cat: "Promos", desc: "Doble carne, cheddar, panceta crocante y papas.", featured: true, image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=300&q=80" },
+                { id: 2, title: "Sandwich de Lomo Completo", price: 12000, cat: "Comidas", desc: "Lomo tierno, lechuga, tomate, jamón y huevo.", featured: false, image: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=300&q=80" },
+                { id: 3, title: "Empanadas de Carne (x3)", price: 4500, cat: "Promos", desc: "Cortada a cuchillo, receta casera.", featured: true, image: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&w=300&q=80" },
+                { id: 4, title: "Cerveza Tirada 500ml", price: 3500, cat: "Bebidas", desc: "Cerveza artesanal helada.", featured: false, image: "https://images.unsplash.com/photo-1608270586620-248524c67de9?auto=format&fit=crop&w=300&q=80" }
+            ]
+        };
+
+        let appData = JSON.parse(localStorage.getItem('7260_menu_data')) || DEFAULT_DATA;
+        let cart = [];
+        let currentCategory = 'Todas';
+        let isAdminLoggedIn = false;
+
+        // --- INICIALIZACIÓN DE LA APP ---
+        document.addEventListener('DOMContentLoaded', () => {
+            applyVisualTheme();
+            renderClientView();
+            lucide.createIcons();
+        });
+
+        function saveData() {
+            localStorage.setItem('7260_menu_data', JSON.stringify(appData));
+            applyVisualTheme();
+            renderClientView();
+            if(isAdminLoggedIn) renderAdminProducts();
+        }
+
+        // --- TEMA Y ESTILOS DINÁMICOS ---
+        function setThemeColor(colorName) {
+            appData.config.themeColor = colorName;
+            saveData();
+        }
+
+        function applyVisualTheme() {
+            const body = document.getElementById('app-body');
+            const cfg = appData.config;
+
+            // Tema de color
+            body.className = `min-h-screen transition-colors duration-200 theme-${cfg.themeColor || 'emerald'} ${cfg.fontStyle || 'font-sans'}`;
+            
+            // Fondo
+            if (cfg.bgStyle === 'pure') {
+                body.style.backgroundColor = '#ffffff';
+            } else if (cfg.bgStyle === 'dark') {
+                body.style.backgroundColor = '#0f172a';
+            } else {
+                body.style.backgroundColor = '#f1f5f9';
+            }
+        }
+
+        // --- VISTAS Y NAVEGACIÓN ---
+        function toggleView() {
+            const clientView = document.getElementById('view-client');
+            const adminView = document.getElementById('view-admin');
+            const btn = document.getElementById('btn-toggle-view');
+
+            if (adminView.classList.contains('hidden')) {
+                clientView.classList.add('hidden');
+                adminView.classList.remove('hidden');
+                btn.innerHTML = `<i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Menú`;
+                document.getElementById('cart-bar').classList.add('hidden');
+            } else {
+                adminView.classList.add('hidden');
+                clientView.classList.remove('hidden');
+                btn.innerHTML = `<i data-lucide="settings" class="w-3.5 h-3.5"></i> Admin`;
+                updateCartBar();
+            }
+            lucide.createIcons();
+        }
+
+        // --- RENDERING MENÚ CLIENTE ---
+        function renderClientView() {
+            const logoLetters = appData.config.name ? appData.config.name.substring(0,2).toUpperCase() : 'DS';
+            document.getElementById('header-logo').innerText = logoLetters;
+            document.getElementById('header-title').innerText = appData.config.name;
+            document.getElementById('client-shop-name').innerText = appData.config.name;
+
+            // Categorías
+            const categories = ['Todas', ...new Set(appData.products.map(p => p.cat))];
+            const tabsContainer = document.getElementById('category-tabs');
+            tabsContainer.innerHTML = categories.map(cat => `
+                <button onclick="filterCategory('${cat}')" class="px-4 py-2 rounded-2xl text-xs font-extrabold whitespace-nowrap transition-all ${currentCategory === cat ? 'btn-theme text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}">
+                    ${cat}
+                </button>
+            `).join('');
+
+            // Filtrado de Productos
+            const filteredProducts = currentCategory === 'Todas' 
+                ? appData.products 
+                : appData.products.filter(p => p.cat === currentCategory);
+
+            const listContainer = document.getElementById('products-list');
+            
+            if (filteredProducts.length === 0) {
+                listContainer.innerHTML = `<div class="col-span-full text-center text-xs text-slate-400 py-12">No hay productos disponibles en esta categoría.</div>`;
+                return;
+            }
+
+            listContainer.innerHTML = filteredProducts.map(p => {
+                const inCart = cart.find(item => item.id === p.id);
+                const qty = inCart ? inCart.qty : 0;
+                const imgUrl = p.image || 'https://placehold.co/200x200/e2e8f0/64748b?text=Producto';
+
+                return `
+                    <div class="bg-white p-3.5 rounded-3xl border border-slate-100 shadow-sm flex gap-3.5 items-center relative overflow-hidden group">
+                        ${p.featured ? `
+                            <div class="absolute top-0 right-0 bg-amber-500 text-white text-[9px] font-black px-2.5 py-0.5 rounded-bl-xl flex items-center gap-0.5 shadow-sm">
+                                <i data-lucide="star" class="w-2.5 h-2.5 fill-white"></i> ESTRELLA
+                            </div>
+                        ` : ''}
+                        
+                        <img src="${imgUrl}" alt="${p.title}" class="w-20 h-20 rounded-2xl object-cover bg-slate-100 flex-shrink-0" onerror="this.src='https://placehold.co/200x200/e2e8f0/64748b?text=Producto'">
+                        
+                        <div class="flex-1 min-w-0 pr-1">
+                            <span class="text-[9px] font-black uppercase tracking-wider text-theme bg-theme-soft px-2 py-0.5 rounded-md">${p.cat}</span>
+                            <h3 class="font-bold text-slate-800 text-sm mt-1 truncate">${p.title}</h3>
+                            <p class="text-xs text-slate-400 line-clamp-2 mt-0.5">${p.desc || ''}</p>
+                            
+                            <div class="flex items-center justify-between mt-2.5">
+                                <span class="font-black text-slate-900 text-sm">$${p.price.toLocaleString()}</span>
+                                
+                                <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+                                    ${qty > 0 ? `
+                                        <button onclick="updateCartQty(${p.id}, -1)" class="w-6 h-6 bg-white text-slate-700 font-black rounded-lg shadow-sm flex items-center justify-center text-xs active:scale-95 transition">-</button>
+                                        <span class="text-xs font-bold px-1 text-slate-800">${qty}</span>
+                                    ` : ''}
+                                    <button onclick="updateCartQty(${p.id}, 1)" class="w-6 h-6 btn-theme text-white font-black rounded-lg shadow-sm flex items-center justify-center text-xs active:scale-95 transition">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        function filterCategory(cat) {
+            currentCategory = cat;
+            renderClientView();
+        }
+
+        // --- CARRITO DE COMPRAS Y PEDIDOS ---
+        function updateCartQty(id, change) {
+            const item = cart.find(i => i.id === id);
+            if (item) {
+                item.qty += change;
+                if (item.qty <= 0) {
+                    cart = cart.filter(i => i.id !== id);
+                }
+            } else if (change > 0) {
+                const product = appData.products.find(p => p.id === id);
+                cart.push({ ...product, qty: 1 });
+            }
+            renderClientView();
+            updateCartBar();
+        }
+
+        function updateCartBar() {
+            const cartBar = document.getElementById('cart-bar');
+            const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+            const count = cart.reduce((acc, item) => acc + item.qty, 0);
+
+            if (count > 0) {
+                cartBar.classList.remove('hidden');
+                document.getElementById('cart-total').innerText = `$${total.toLocaleString()}`;
+                document.getElementById('cart-count').innerText = count;
+            } else {
+                cartBar.classList.add('hidden');
+            }
+        }
+
+        function openCheckout() {
+            const modal = document.getElementById('modal-checkout');
+            const detailContainer = document.getElementById('cart-items-detail');
+            
+            detailContainer.innerHTML = cart.map(item => `
+                <div class="py-2.5 flex justify-between items-center">
+                    <div>
+                        <span class="font-bold text-slate-800">${item.qty}x ${item.title}</span>
+                        <span class="text-xs text-slate-400 block">$${item.price.toLocaleString()} c/u</span>
+                    </div>
+                    <span class="font-bold text-slate-900">$${(item.price * item.qty).toLocaleString()}</span>
+                </div>
+            `).join('');
+
+            toggleAddressField();
+            togglePaymentAliasNotice();
+            modal.classList.remove('hidden');
+        }
+
+        function closeCheckout() {
+            document.getElementById('modal-checkout').classList.add('hidden');
+        }
+
+        function toggleAddressField() {
+            const orderType = document.getElementById('order-type').value;
+            const containerAddress = document.getElementById('container-address');
+            if (orderType === 'Delivery') {
+                containerAddress.classList.remove('hidden');
+            } else {
+                containerAddress.classList.add('hidden');
+            }
+        }
+
+        function togglePaymentAliasNotice() {
+            const paymentType = document.getElementById('order-payment').value;
+            const containerAlias = document.getElementById('container-payment-alias');
+            const displayAlias = document.getElementById('display-payment-alias');
+
+            if (paymentType === 'Transferencia') {
+                containerAlias.classList.remove('hidden');
+                displayAlias.innerText = appData.config.alias || 'Sin alias configurado';
+            } else {
+                containerAlias.classList.add('hidden');
+            }
+        }
+
+        function copyAliasToClipboard() {
+            const alias = appData.config.alias || '';
+            if (!alias) {
+                alert('No hay alias configurado.');
+                return;
+            }
+            
+            // Clipboard fallback para iFrame
+            const tempInput = document.createElement('input');
+            tempInput.value = alias;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            alert('¡Alias copiado al portapapeles!');
+        }
+
+       function sendWhatsAppOrder() {
+    const name = document.getElementById('order-name').value.trim();
+    const type = document.getElementById('order-type').value;
+    const address = document.getElementById('order-address').value.trim();
+    const payment = document.getElementById('order-payment').value;
+    const notes = document.getElementById('order-notes').value.trim();
+
+    if (!name) {
+        alert('Por favor, ingresa tu nombre completo.');
+        return;
+    }
+
+    if (type === 'Delivery' && !address) {
+        alert('Por favor, ingresa la dirección exacta para el envío.');
+        return;
+    }
+
+    let text = `*NUEVO PEDIDO - ${appData.config.name.toUpperCase()}*\n`;
+    text += `__________________________________\n`;
+    text += `👤 *Cliente:* ${name}\n`;
+    text += `🛵 *Modalidad:* ${type}\n`;
+    if (type === 'Delivery') {
+        text += `📍 *Dirección:* ${address}\n`;
+    }
+    text += `💳 *Forma de Pago:* ${payment}\n`;
+    if(notes) text += `📝 *Aclaraciones:* ${notes}\n`;
+    text += `__________________________________\n\n`;
+    text += `📋 *DETALLE DEL PEDIDO:* \n`;
+
+    let total = 0;
+    cart.forEach(item => {
+        const subtotal = item.price * item.qty;
+        total += subtotal;
+        text += `• ${item.qty}x ${item.title} - $${subtotal.toLocaleString()}\n`;
+    });
+
+    text += `__________________________________\n`;
+    text += `💰 *TOTAL A PAGAR: $${total.toLocaleString()}*\n`;
+
+    if (payment === 'Transferencia') {
+        text += `\n📌 *Nota:* Recordá adjuntar la foto del comprobante de transferencia a continuación en este chat.`;
+    }
+
+    const encodedText = encodeURIComponent(text);
+    const waUrl = `https://wa.me/${appData.config.phone}?text=${encodedText}`;
+
+    // Abrir WhatsApp en una nueva pestaña
+    window.open(waUrl, '_blank');
+
+    // Limpiar carrito y cerrar modal para no obstaculizar la vista al volver
+    cart = [];
+    closeCheckout();
+    renderClientView();
+    updateCartBar();
+}
+
+        // --- PANEL DE ADMINISTRACIÓN ---
+        function loginAdmin() {
+            const passInput = document.getElementById('admin-pass').value;
+            if (passInput === appData.config.pass) {
+                isAdminLoggedIn = true;
+                document.getElementById('admin-login').classList.add('hidden');
+                document.getElementById('admin-content').classList.remove('hidden');
+                
+                document.getElementById('cfg-name').value = appData.config.name;
+                document.getElementById('cfg-phone').value = appData.config.phone;
+                document.getElementById('cfg-alias').value = appData.config.alias || '';
+                document.getElementById('cfg-pass').value = appData.config.pass;
+                document.getElementById('cfg-bg-style').value = appData.config.bgStyle || 'light';
+                document.getElementById('cfg-radius-style').value = appData.config.radiusStyle || 'rounded-2xl';
+                document.getElementById('cfg-font-style').value = appData.config.fontStyle || 'font-sans';
+                
+                renderAdminProducts();
+            } else {
+                alert('Clave incorrecta.');
+            }
+        }
+
+        function logoutAdmin() {
+            isAdminLoggedIn = false;
+            document.getElementById('admin-login').classList.remove('hidden');
+            document.getElementById('admin-content').classList.add('hidden');
+            document.getElementById('admin-pass').value = '';
+        }
+
+        function saveConfig() {
+            appData.config.name = document.getElementById('cfg-name').value.trim();
+            appData.config.phone = document.getElementById('cfg-phone').value.trim();
+            appData.config.alias = document.getElementById('cfg-alias').value.trim();
+            appData.config.pass = document.getElementById('cfg-pass').value.trim();
+            appData.config.bgStyle = document.getElementById('cfg-bg-style').value;
+            appData.config.radiusStyle = document.getElementById('cfg-radius-style').value;
+            appData.config.fontStyle = document.getElementById('cfg-font-style').value;
+            saveData();
+            alert('Configuración guardada exitosamente.');
+        }
+
+        // FOTO Y BASE64
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('prod-image-base64').value = e.target.result;
+                document.getElementById('img-preview-src').src = e.target.result;
+                document.getElementById('image-preview-container').classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeProductPhoto() {
+            document.getElementById('prod-image-file').value = '';
+            document.getElementById('prod-image-base64').value = '';
+            document.getElementById('image-preview-container').classList.add('hidden');
+        }
+
+        function saveProduct() {
+            const id = document.getElementById('prod-id').value;
+            const title = document.getElementById('prod-title').value.trim();
+            const price = parseFloat(document.getElementById('prod-price').value);
+            const cat = document.getElementById('prod-cat').value.trim();
+            const desc = document.getElementById('prod-desc').value.trim();
+            const image = document.getElementById('prod-image-base64').value;
+            const featured = document.getElementById('prod-featured').checked;
+
+            if (!title || isNaN(price) || !cat) {
+                alert('Por favor completa el nombre, precio y categoría.');
+                return;
+            }
+
+            if (id) {
+                const p = appData.products.find(item => item.id == id);
+                p.title = title; 
+                p.price = price; 
+                p.cat = cat; 
+                p.desc = desc;
+                p.featured = featured;
+                p.image = image;
+            } else {
+                const newProd = { 
+                    id: Date.now(), 
+                    title, 
+                    price, 
+                    cat, 
+                    desc, 
+                    featured, 
+                    image: image || '' 
+                };
+                appData.products.push(newProd);
+            }
+
+            resetProductForm();
+            saveData();
+        }
+
+        function resetProductForm() {
+            document.getElementById('prod-id').value = '';
+            document.getElementById('prod-title').value = '';
+            document.getElementById('prod-price').value = '';
+            document.getElementById('prod-cat').value = '';
+            document.getElementById('prod-desc').value = '';
+            removeProductPhoto();
+            document.getElementById('prod-featured').checked = false;
+            document.getElementById('admin-form-title').innerHTML = `<i data-lucide="plus-circle" class="w-4 h-4 text-theme"></i> Agregar Producto`;
+            lucide.createIcons();
+        }
+
+        function editProduct(id) {
+            const p = appData.products.find(item => item.id === id);
+            if (p) {
+                document.getElementById('prod-id').value = p.id;
+                document.getElementById('prod-title').value = p.title;
+                document.getElementById('prod-price').value = p.price;
+                document.getElementById('prod-cat').value = p.cat;
+                document.getElementById('prod-desc').value = p.desc || '';
+                document.getElementById('prod-featured').checked = p.featured || false;
+                
+                if (p.image) {
+                    document.getElementById('prod-image-base64').value = p.image;
+                    document.getElementById('img-preview-src').src = p.image;
+                    document.getElementById('image-preview-container').classList.remove('hidden');
+                } else {
+                    removeProductPhoto();
+                }
+
+                document.getElementById('admin-form-title').innerHTML = `<i data-lucide="edit" class="w-4 h-4 text-theme"></i> Editar Producto`;
+                lucide.createIcons();
+
+                // DESPLAZAMIENTO SUAVE DIRECTO A LA SECCIÓN "AGREGAR / EDITAR PRODUCTO"
+                const formSection = document.getElementById('section-product-form');
+                if (formSection) {
+                    formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+        }
+
+        function deleteProduct(id) {
+            if (confirm('¿Seguro que deseas eliminar este producto?')) {
+                appData.products = appData.products.filter(p => p.id !== id);
+                saveData();
+            }
+        }
+
+        function moveProduct(index, direction) {
+            const targetIndex = index + direction;
+            if (targetIndex < 0 || targetIndex >= appData.products.length) return;
+
+            const temp = appData.products[index];
+            appData.products[index] = appData.products[targetIndex];
+            appData.products[targetIndex] = temp;
+
+            saveData();
+        }
+
+        function toggleStarProduct(id) {
+            const p = appData.products.find(item => item.id === id);
+            if (p) {
+                p.featured = !p.featured;
+                saveData();
+            }
+        }
+
+        function renderAdminProducts() {
+            const list = document.getElementById('admin-products-list');
+            list.innerHTML = appData.products.map((p, index) => `
+                <div class="py-3 flex justify-between items-center gap-2">
+                    <div class="flex items-center gap-2.5">
+                        <div class="flex flex-col gap-0.5 font-black text-[10px] text-slate-400">
+                            <button onclick="moveProduct(${index}, -1)" ${index === 0 ? 'disabled class="opacity-20"' : 'class="hover:text-slate-900"'}>▲</button>
+                            <button onclick="moveProduct(${index}, 1)" ${index === appData.products.length - 1 ? 'disabled class="opacity-20"' : 'class="hover:text-slate-900"'}>▼</button>
+                        </div>
+
+                        <div>
+                            <span class="font-bold text-slate-800 flex items-center gap-1">
+                                ${p.title}
+                                ${p.featured ? '<i data-lucide="star" class="w-3 h-3 text-amber-500 fill-amber-500 inline"></i>' : ''}
+                            </span>
+                            <span class="text-slate-400 text-[11px]">$${p.price.toLocaleString()} • ${p.cat}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <button onclick="toggleStarProduct(${p.id})" title="Destacar" class="p-1 rounded-lg hover:bg-slate-100 ${p.featured ? 'text-amber-500' : 'text-slate-300'}">
+                            <i data-lucide="star" class="w-4 h-4 ${p.featured ? 'fill-amber-500' : ''}"></i>
+                        </button>
+                        <button onclick="editProduct(${p.id})" class="text-blue-600 hover:underline font-bold">Editar</button>
+                        <button onclick="deleteProduct(${p.id})" class="text-red-600 hover:underline font-bold">Borrar</button>
+                    </div>
+                </div>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+        // --- EXPORTAR E IMPORTAR BACKUP JSON ---
+        function exportBackupJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `backup_menu_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importBackupJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (importedData.config && importedData.products) {
+                        appData = importedData;
+                        saveData();
+                        alert('Backup importado correctamente.');
+                        location.reload();
+                    } else {
+                        alert('El archivo JSON no tiene un formato válido.');
+                    }
+                } catch (err) {
+                    alert('Error al leer el archivo JSON.');
+                }
+            };
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
