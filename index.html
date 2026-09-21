@@ -73,10 +73,10 @@
             <div class="relative z-10">
                 <div class="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-full text-[11px] font-semibold text-white mb-2">
                     <span class="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
-                    Abierto • Pedidos directos por WhatsApp
+                    <span id="client-badge-text">Abierto • Pedidos directos por WhatsApp</span>
                 </div>
                 <h2 id="client-shop-name" class="text-2xl md:text-3xl font-black tracking-tight mb-1">Cargando...</h2>
-                <p class="text-xs md:text-sm text-white/90 font-medium max-w-lg">Elegí lo que más te guste de nuestra carta digital y confirmá tu pedido al instante.</p>
+                <p id="client-shop-subtitle" class="text-xs md:text-sm text-white/90 font-medium max-w-lg whitespace-pre-line">Elegí lo que más te guste de nuestra carta digital y confirmá tu pedido al instante.</p>
             </div>
             <div class="absolute -right-6 -bottom-8 opacity-15 text-white pointer-events-none">
                 <i data-lucide="utensils" class="w-40 h-40"></i>
@@ -228,11 +228,12 @@
                 </button>
             </div>
 
-            <!-- Configuración General -->
+            <!-- Configuración General del Local y Encabezado -->
             <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-4">
                 <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2 border-b border-slate-100 pb-2">
-                    <i data-lucide="sliders" class="w-4 h-4 text-theme"></i> Datos del Local
+                    <i data-lucide="sliders" class="w-4 h-4 text-theme"></i> Datos del Local, Encabezado & WhatsApp
                 </h3>
+                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs text-slate-600 font-medium mb-1">Nombre del Comercio</label>
@@ -251,7 +252,29 @@
                         <input type="password" id="cfg-pass" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm outline-none focus:border-slate-400">
                     </div>
                 </div>
-                <button onclick="saveConfig()" class="w-full bg-slate-900 text-white text-xs font-bold py-2.5 rounded-xl hover:bg-black transition">Guardar Datos del Local</button>
+
+                <!-- Insignia / Estado Superior -->
+                <div class="space-y-2 pt-2 border-t border-slate-100">
+                    <label class="block text-xs text-slate-600 font-medium">Insignia / Estado Superior (Banner)</label>
+                    <input type="text" id="cfg-badge" placeholder="Ej: Abierto • Pedidos directos por WhatsApp" class="w-full border border-slate-200 rounded-xl p-2.5 text-sm outline-none focus:border-slate-400">
+                    
+                    <!-- Botones de Sugerencias Rápidas -->
+                    <div class="flex flex-wrap gap-1.5 pt-1">
+                        <span class="text-[11px] text-slate-400 font-medium self-center mr-1">Sugerencias rápidas:</span>
+                        <button type="button" onclick="setQuickBadge('Abierto • Pedidos directos por WhatsApp')" class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 py-1 px-2.5 rounded-lg border border-slate-200 transition">🟢 Abierto</button>
+                        <button type="button" onclick="setQuickBadge('Tomando pedidos para la noche 🌙')" class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 py-1 px-2.5 rounded-lg border border-slate-200 transition">🌙 Pedidos Noche</button>
+                        <button type="button" onclick="setQuickBadge('Envíos Sin Cargo en la ciudad 🛵')" class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 py-1 px-2.5 rounded-lg border border-slate-200 transition">🛵 Envíos Gratis</button>
+                        <button type="button" onclick="setQuickBadge('Cerrado por el momento • Consultá el menú')" class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 py-1 px-2.5 rounded-lg border border-slate-200 transition">🔴 Cerrado</button>
+                    </div>
+                </div>
+
+                <!-- Texto / Subtítulo del Catálogo -->
+                <div class="pt-2">
+                    <label class="block text-xs text-slate-600 font-medium mb-1">Texto / Subtítulo del Catálogo (Frase Descriptiva)</label>
+                    <textarea id="cfg-subtitle" rows="3" placeholder="Elegí lo que más te guste de nuestra carta digital..." class="w-full border border-slate-200 rounded-xl p-2.5 text-sm outline-none focus:border-slate-400 resize-none"></textarea>
+                </div>
+
+                <button onclick="saveConfig()" class="w-full bg-slate-900 text-white text-xs font-bold py-2.5 rounded-xl hover:bg-black transition">Guardar Configuración del Local</button>
             </div>
 
             <!-- Módulo de Personalización Visual -->
@@ -399,6 +422,8 @@
         const DEFAULT_DATA = {
             config: {
                 name: "Deli Saladillo",
+                badgeText: "Abierto • Pedidos directos por WhatsApp",
+                subtitleText: "Elegí lo que más te guste de nuestra carta digital y confirmá tu pedido al instante.",
                 phone: "5492344123456",
                 alias: "DELI.SALADILLO.MP",
                 pass: "1234",
@@ -445,7 +470,7 @@
             const cfg = appData.config;
 
             // Tema de color
-            body.className = `min-h-screen transition-colors duration-200 theme-${cfg.themeColor || 'emerald'} ${cfg.fontStyle || 'font-sans'}`;
+            body.className = `pb-24 min-h-screen transition-colors duration-200 theme-${cfg.themeColor || 'emerald'} ${cfg.fontStyle || 'font-sans'}`;
             
             // Fondo
             if (cfg.bgStyle === 'pure') {
@@ -483,6 +508,10 @@
             document.getElementById('header-logo').innerText = logoLetters;
             document.getElementById('header-title').innerText = appData.config.name;
             document.getElementById('client-shop-name').innerText = appData.config.name;
+
+            // Insignia y Subtítulo dinámicos
+            document.getElementById('client-badge-text').innerText = appData.config.badgeText || "Abierto • Pedidos directos por WhatsApp";
+            document.getElementById('client-shop-subtitle').innerText = appData.config.subtitleText || "Elegí lo que más te guste de nuestra carta digital y confirmá tu pedido al instante.";
 
             // Categorías
             const categories = ['Todas', ...new Set(appData.products.map(p => p.cat))];
@@ -632,7 +661,6 @@
                 return;
             }
             
-            // Clipboard fallback para iFrame
             const tempInput = document.createElement('input');
             tempInput.value = alias;
             document.body.appendChild(tempInput);
@@ -643,61 +671,60 @@
             alert('¡Alias copiado al portapapeles!');
         }
 
-       function sendWhatsAppOrder() {
-    const name = document.getElementById('order-name').value.trim();
-    const type = document.getElementById('order-type').value;
-    const address = document.getElementById('order-address').value.trim();
-    const payment = document.getElementById('order-payment').value;
-    const notes = document.getElementById('order-notes').value.trim();
+        function sendWhatsAppOrder() {
+            const name = document.getElementById('order-name').value.trim();
+            const type = document.getElementById('order-type').value;
+            const address = document.getElementById('order-address').value.trim();
+            const payment = document.getElementById('order-payment').value;
+            const notes = document.getElementById('order-notes').value.trim();
 
-    if (!name) {
-        alert('Por favor, ingresa tu nombre completo.');
-        return;
-    }
+            if (!name) {
+                alert('Por favor, ingresa tu nombre completo.');
+                return;
+            }
 
-    if (type === 'Delivery' && !address) {
-        alert('Por favor, ingresa la dirección exacta para el envío.');
-        return;
-    }
+            if (type === 'Delivery' && !address) {
+                alert('Por favor, ingresa la dirección exacta para el envío.');
+                return;
+            }
 
-    let text = `*NUEVO PEDIDO - ${appData.config.name.toUpperCase()}*\n`;
-    text += `__________________________________\n`;
-    text += `👤 *Cliente:* ${name}\n`;
-    text += `🛵 *Modalidad:* ${type}\n`;
-    if (type === 'Delivery') {
-        text += `📍 *Dirección:* ${address}\n`;
-    }
-    text += `💳 *Forma de Pago:* ${payment}\n`;
-    if(notes) text += `📝 *Aclaraciones:* ${notes}\n`;
-    text += `__________________________________\n\n`;
-    text += `📋 *DETALLE DEL PEDIDO:* \n`;
+            let text = `*NUEVO PEDIDO - ${appData.config.name.toUpperCase()}*\n`;
+            text += `__________________________________\n`;
+            text += `👤 *Cliente:* ${name}\n`;
+            text += `🛵 *Modalidad:* ${type}\n`;
+            if (type === 'Delivery') {
+                text += `📍 *Dirección:* ${address}\n`;
+            }
+            text += `💳 *Forma de Pago:* ${payment}\n`;
+            if(notes) text += `📝 *Aclaraciones:* ${notes}\n`;
+            text += `__________________________________\n\n`;
+            text += `📋 *DETALLE DEL PEDIDO:* \n`;
 
-    let total = 0;
-    cart.forEach(item => {
-        const subtotal = item.price * item.qty;
-        total += subtotal;
-        text += `• ${item.qty}x ${item.title} - $${subtotal.toLocaleString()}\n`;
-    });
+            let total = 0;
+            cart.forEach(item => {
+                const subtotal = item.price * item.qty;
+                total += subtotal;
+                text += `• ${item.qty}x ${item.title} - $${subtotal.toLocaleString()}\n`;
+            });
 
-    text += `__________________________________\n`;
-    text += `💰 *TOTAL A PAGAR: $${total.toLocaleString()}*\n`;
+            text += `__________________________________\n`;
+            text += `💰 *TOTAL A PAGAR: $${total.toLocaleString()}*\n`;
 
-    if (payment === 'Transferencia') {
-        text += `\n📌 *Nota:* Recordá adjuntar la foto del comprobante de transferencia a continuación en este chat.`;
-    }
+            if (payment === 'Transferencia') {
+                text += `\n📌 *Nota:* Recordá adjuntar la foto del comprobante de transferencia a continuación en este chat.`;
+            }
 
-    const encodedText = encodeURIComponent(text);
-    const waUrl = `https://wa.me/${appData.config.phone}?text=${encodedText}`;
+            const encodedText = encodeURIComponent(text);
+            const waUrl = `https://wa.me/${appData.config.phone}?text=${encodedText}`;
 
-    // Abrir WhatsApp en una nueva pestaña
-    window.open(waUrl, '_blank');
+            window.open(waUrl, '_blank');
 
-    // Limpiar carrito y cerrar modal para no obstaculizar la vista al volver
-    cart = [];
-    closeCheckout();
-    renderClientView();
-    updateCartBar();
-}
+            // Limpiar carrito y cerrar modal tras abrir WhatsApp
+            cart = [];
+            closeCheckout();
+            renderClientView();
+            updateCartBar();
+        }
 
         // --- PANEL DE ADMINISTRACIÓN ---
         function loginAdmin() {
@@ -708,6 +735,8 @@
                 document.getElementById('admin-content').classList.remove('hidden');
                 
                 document.getElementById('cfg-name').value = appData.config.name;
+                document.getElementById('cfg-badge').value = appData.config.badgeText || 'Abierto • Pedidos directos por WhatsApp';
+                document.getElementById('cfg-subtitle').value = appData.config.subtitleText || 'Elegí lo que más te guste de nuestra carta digital y confirmá tu pedido al instante.';
                 document.getElementById('cfg-phone').value = appData.config.phone;
                 document.getElementById('cfg-alias').value = appData.config.alias || '';
                 document.getElementById('cfg-pass').value = appData.config.pass;
@@ -728,8 +757,14 @@
             document.getElementById('admin-pass').value = '';
         }
 
+        function setQuickBadge(text) {
+            document.getElementById('cfg-badge').value = text;
+        }
+
         function saveConfig() {
             appData.config.name = document.getElementById('cfg-name').value.trim();
+            appData.config.badgeText = document.getElementById('cfg-badge').value.trim();
+            appData.config.subtitleText = document.getElementById('cfg-subtitle').value.trim();
             appData.config.phone = document.getElementById('cfg-phone').value.trim();
             appData.config.alias = document.getElementById('cfg-alias').value.trim();
             appData.config.pass = document.getElementById('cfg-pass').value.trim();
@@ -832,7 +867,6 @@
                 document.getElementById('admin-form-title').innerHTML = `<i data-lucide="edit" class="w-4 h-4 text-theme"></i> Editar Producto`;
                 lucide.createIcons();
 
-                // DESPLAZAMIENTO SUAVE DIRECTO A LA SECCIÓN "AGREGAR / EDITAR PRODUCTO"
                 const formSection = document.getElementById('section-product-form');
                 if (formSection) {
                     formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
